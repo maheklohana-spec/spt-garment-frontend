@@ -62,7 +62,7 @@ export default function Invoice() {
     <div>
       {/* Toolbar - hidden on print */}
       <div className="bg-blue-900 text-white px-6 py-3 flex gap-3 items-center no-print">
-        <button onClick={() => window.history.back()} className="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded text-sm">← Back</button>
+        <button onClick={() => window.location.href='/bills'} className="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded text-sm">← Back</button>
         <button onClick={() => window.print()} className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded text-sm font-bold">🖨 Print</button>
         <span className="text-sm opacity-70">Invoice: {bill.bill_no}</span>
       </div>
