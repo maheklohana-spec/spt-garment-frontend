@@ -145,7 +145,11 @@ export default function Sales() {
   const cashAmount = totalAmount - (parseFloat(form.chq_amount) || 0);
 
   const handleSave = useCallback(async () => {
-    if (saleType === 'party' && !form.party_id) {
+   if (
+  saleType === 'party' &&
+  !form.party_id &&
+  !form.party_name
+) {
       alert('Please select a party!');
       return;
     }
@@ -286,20 +290,66 @@ window.open(`/invoice/${response.data.id}`, '_blank');
               </div>
             </div>
             {saleType === 'party' && (
-              <>
-                <div>
-                  <label className="text-xs font-semibold text-blue-700 block mb-1">Select Party</label>
-                  <select value={form.party_id} onChange={e => handlePartyChange(e.target.value)} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500">
-                    <option value="">-- Select Party --</option>
-                    {parties.map(p => <option key={p.id} value={p.id}>{p.party_name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-blue-700 block mb-1">Print Name</label>
-                  <input type="text" value={form.print_name} onChange={e => setForm({...form, print_name: e.target.value})} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500" />
-                </div>
-              </>
-            )}
+  <>
+    <div>
+      <label className="text-xs font-semibold text-blue-700 block mb-1">
+        Select Party (Optional)
+      </label>
+
+      <select
+        value={form.party_id}
+        onChange={e => handlePartyChange(e.target.value)}
+        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+      >
+        <option value="">-- Manual Entry --</option>
+
+        {parties.map(p => (
+          <option key={p.id} value={p.id}>
+            {p.party_name}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div>
+      <label className="text-xs font-semibold text-blue-700 block mb-1">
+        Party Name
+      </label>
+
+      <input
+        type="text"
+        value={form.party_name || ''}
+        onChange={e =>
+          setForm({
+            ...form,
+            party_name: e.target.value,
+            print_name: e.target.value
+          })
+        }
+        placeholder="Enter Party Name"
+        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+      />
+    </div>
+
+    <div>
+      <label className="text-xs font-semibold text-blue-700 block mb-1">
+        Print Name
+      </label>
+
+      <input
+        type="text"
+        value={form.print_name || ''}
+        onChange={e =>
+          setForm({
+            ...form,
+            print_name: e.target.value
+          })
+        }
+        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+      />
+    </div>
+  </>
+)}
             {saleType === 'cash' && (
               <div className="flex items-center">
                 <span className="bg-green-100 text-green-800 font-bold px-4 py-2 rounded-lg text-sm">💵 CASH SALE</span>
