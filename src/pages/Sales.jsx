@@ -187,12 +187,12 @@ export default function Sales() {
     setItems(newItems);
   };
 
-  const addRow = () => {
-    setItems([...items, {
-      design_id: '', design_no: '', description: '', size_id: '',
-      size_name: '', qty: '', rate: '', net_amt: 0, remarks: '', availableSizes: []
-    }]);
-  };
+  const addRow = useCallback(() => {
+  setItems(prev => [...prev, {
+    design_id: '', design_no: '', description: '', size_id: '',
+    size_name: '', qty: '', rate: '', net_amt: 0, remarks: '', availableSizes: []
+  }]);
+}, []);
 
   const removeRow = (index) => {
     if (items.length === 1) return;
