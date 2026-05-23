@@ -7,6 +7,11 @@ const API = 'https://spt-garment.onrender.com/api';
 
 export default function Sales() {
   useEnterKey();
+
+  const editId = window.location.pathname.includes('/edit/') 
+    ? window.location.pathname.split('/edit/')[1] 
+    : null;
+
   const [designs, setDesigns] = useState([]);
   const [parties, setParties] = useState([]);
   const [sizes, setSizes] = useState([]);
@@ -55,72 +60,72 @@ export default function Sales() {
   }, [form.vch_date, form.payment_days]);
 
   const fetchData = async () => {
-    const [d, p, s, b] = await Promise.all([
-      axios.get(`${API}/masters/designs`),
-      axios.get(`${API}/masters/parties`),
-      axios.get(`${API}/masters/sizes`),
-      axios.get(`${API}/sales/next-bill-no`)
-    ]);
-    setDesigns(d.data);
-    setParties(p.data);
-    setSizes(s.data);
-    setBillNo(b.data.bill_no);
-  };
-  useEffect(() => {
-  const pathParts = window.location.pathname.split('/');
-  const editId = pathParts[pathParts.length - 1];
-  if (editId && editId !== 'sales' && !isNaN(editId)) {
-    loadBillForEdit(editId);
-  }
-}, []);
+    try {
+      const [d, p, s, b] = await Promise.all([
+        axios.get(`${API}/masters/designs`),
+        axios.get(`${API}/masters/parties`),
+        axios.get(`${API}/masters/sizes`),
+        axios.get(`${API}/sales/next-bill-no`)
+      ]);
+      setDesigns(d.data);
+      setParties(p.data);
+      setSizes(s.data);
 
-const loadBillForEdit = async (id) => {
-  try {
-    const res = await axios.get(`${API}/bills/${id}`);
-    const bill = res.data;
-    setSavedId(bill.id);
-    setSaved(true);
-    setBillNo(bill.bill_no);
-    setSaleType(bill.sale_type || 'cash');
-    setForm({
-      series: bill.series || 'CASH SALE',
-      vch_date: bill.vch_date,
-      tax_type: bill.tax_type || 'Itemwise',
-      party_id: bill.party_id || '',
-      party_name: bill.party_name || '',
-      print_name: bill.print_name || '',
-      from_shop: bill.from_shop || 'SHOP',
-      transport: bill.transport || 'Road',
-      vehicle_no: bill.vehicle_no || '',
-      distance_km: bill.distance_km || '',
-      lr_no: bill.lr_no || '',
-      lr_date: bill.lr_date || '',
-      eway_bill_no: bill.eway_bill_no || '',
-      eway_bill_date: bill.eway_bill_date || '',
-      parcels: bill.parcels || '',
-      form_type: bill.form_type || 'None',
-      courier: bill.courier || '',
-      narration: bill.narration || '',
-      chq_amount: bill.chq_amount || 0,
-      payment_days: bill.payment_days || 30,
-      due_date: bill.due_date || '',
-    });
-    setItems(bill.items.map(item => ({
-      design_id: item.design_id || '',
-      design_no: item.design_no || '',
-      description: item.description || '',
-      size_id: item.size_id || '',
-      size_name: item.size_name || '',
-      qty: item.qty || '',
-      rate: item.rate || '',
-      net_amt: item.net_amt || 0,
-      remarks: item.remarks || '',
-      availableSizes: []
-    })));
-  } catch (err) {
-    alert('Error loading bill for edit');
-  }
-};
+      if (editId) {
+        // Load existing bill for editing
+        const billRes = await axios.get(`${API}/bills/${editId}`);
+        const bill = billRes.data;
+        setBillNo(bill.bill_no);
+        setSavedId(parseInt(editId));
+        setSaved(true);
+        setSaleType(bill.sale_type || 'cash');
+        setForm({
+          series: bill.series || 'CASH SALE',
+          vch_date: bill.vch_date || new Date().toISOString().split('T')[0],
+          tax_type: bill.tax_type || 'Itemwise',
+          party_id: bill.party_id || '',
+          party_name: bill.party_name || '',
+          print_name: bill.print_name || '',
+          from_shop: bill.from_shop || 'SHOP',
+          transport: bill.transport || 'Road',
+          vehicle_no: bill.vehicle_no || '',
+          distance_km: bill.distance_km || '',
+          lr_no: bill.lr_no || '',
+          lr_date: bill.lr_date || '',
+          eway_bill_no: bill.eway_bill_no || '',
+          eway_bill_date: bill.eway_bill_date || '',
+          parcels: bill.parcels || '',
+          form_type: bill.form_type || 'None',
+          courier: bill.courier || '',
+          narration: bill.narration || '',
+          chq_amount: bill.chq_amount || 0,
+          payment_days: bill.payment_days || 30,
+          due_date: bill.due_date || '',
+        });
+        if (bill.items && bill.items.length > 0) {
+          setItems(bill.items.map(item => {
+            const design = d.data.find(des => des.id === item.design_id);
+            return {
+              design_id: item.design_id || '',
+              design_no: item.design_no || '',
+              description: item.description || '',
+              size_id: item.size_id || '',
+              size_name: item.size_name || '',
+              qty: item.qty || '',
+              rate: item.rate || '',
+              net_amt: item.net_amt || 0,
+              remarks: item.remarks || '',
+              availableSizes: design ? design.sizes || [] : s.data
+            };
+          }));
+        }
+      } else {
+        setBillNo(b.data.bill_no);
+      }
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    }
+  };
 
   const handlePartyChange = (partyId) => {
     const party = parties.find(p => p.id === parseInt(partyId));
@@ -200,12 +205,8 @@ const loadBillForEdit = async (id) => {
   const cashAmount = totalAmount - (parseFloat(form.chq_amount) || 0);
 
   const handleSave = useCallback(async () => {
-   if (
-  saleType === 'party' &&
-  !form.party_id &&
-  !form.party_name
-) {
-      alert('Please select a party!');
+    if (saleType === 'party' && !form.party_id && !form.party_name) {
+      alert('Please select or enter a party!');
       return;
     }
     const validItems = items.filter(i => i.description && i.qty);
@@ -215,7 +216,7 @@ const loadBillForEdit = async (id) => {
     }
     setSaving(true);
     try {
-      const response = await axios.post(`${API}/sales`, {
+      const payload = {
         ...form,
         bill_no: billNo,
         sale_type: saleType,
@@ -225,30 +226,28 @@ const loadBillForEdit = async (id) => {
         total_amount: totalAmount,
         cash_amount: cashAmount,
         items: validItems
-      });
-      const newId = savedId || response.data?.id;
-      setSavedId(newId);
+      };
+
+      if (editId) {
+        // UPDATE existing bill
+        await axios.put(`${API}/sales/${editId}`, payload);
+        setSavedId(parseInt(editId));
+        window.open(`/invoice/${editId}`, '_blank');
+      } else {
+        // CREATE new bill
+        const response = await axios.post(`${API}/sales`, payload);
+        setSavedId(response.data.id);
+        window.open(`/invoice/${response.data.id}`, '_blank');
+      }
       setSaved(true);
-      window.open(`/invoice/${newId}`, '_blank');
     } catch (err) {
       alert(err.response?.data?.message || 'Error saving sale');
     }
     setSaving(false);
-  }, [form, items, saleType, billNo, totalQty, grossAmount, totalAmount, cashAmount]);
+  }, [form, items, saleType, billNo, totalQty, grossAmount, totalAmount, cashAmount, editId]);
 
   const handleNewBill = () => {
-    setSaved(false);
-    setSavedId(null);
-    fetchData();
-    setItems([{
-      design_id: '', design_no: '', description: '', size_id: '',
-      size_name: '', qty: '', rate: '', net_amt: 0, remarks: '', availableSizes: []
-    }]);
-    setForm(prev => ({
-      ...prev,
-      party_id: '', party_name: '', print_name: '',
-      narration: '', chq_amount: 0
-    }));
+    window.location.href = '/sales';
   };
 
   useEffect(() => {
@@ -276,25 +275,27 @@ const loadBillForEdit = async (id) => {
 
           {/* Form Header */}
           <div className="bg-blue-900 text-white px-5 py-3 rounded-t-xl flex items-center justify-between">
-  <h2 className="font-bold text-base">📋 Sales Readymade — {saved ? 'SAVED ✅' : 'ADD'}</h2>
-  <div className="flex items-center gap-3 text-sm">
-    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">✓ Party GST: Registered</span>
-    <span className="bg-blue-700 px-3 py-1 rounded-full text-xs">FY Amt: ₹{grossAmount.toFixed(2)}</span>
-    <button
-      onClick={handleSave}
-      disabled={saving}
-      className="bg-green-500 hover:bg-green-400 text-white px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50"
-    >
-      {saving ? 'Saving...' : '💾 Save F6'}
-    </button>
-    <button
-      onClick={handleNewBill}
-      className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-4 py-1.5 rounded-lg text-xs font-bold"
-    >
-      + New Bill
-    </button>
-  </div>
-</div>
+            <h2 className="font-bold text-base">
+              📋 Sales Readymade — {editId ? 'EDIT ✏️' : saved ? 'SAVED ✅' : 'ADD'}
+            </h2>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-semibold">✓ Party GST: Registered</span>
+              <span className="bg-blue-700 px-3 py-1 rounded-full text-xs">FY Amt: ₹{grossAmount.toFixed(2)}</span>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-green-500 hover:bg-green-400 text-white px-4 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : editId ? '💾 Update' : '💾 Save F6'}
+              </button>
+              <button
+                onClick={handleNewBill}
+                className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 px-4 py-1.5 rounded-lg text-xs font-bold"
+              >
+                + New Bill
+              </button>
+            </div>
+          </div>
 
           {/* Row 1 — Basic Details */}
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3 p-4 border-b border-gray-100">
@@ -308,6 +309,7 @@ const loadBillForEdit = async (id) => {
                 <option>CASH SALE</option>
                 <option>SONAM TRADERS</option>
                 <option>SP SERIES</option>
+                <option>SP</option>
               </select>
             </div>
             <div>
@@ -318,7 +320,6 @@ const loadBillForEdit = async (id) => {
               <label className="text-xs font-semibold text-blue-700 block mb-1">Bill No</label>
               <input type="text" value={billNo} readOnly className="w-full border border-gray-200 rounded px-2 py-1.5 text-xs bg-yellow-50 font-bold text-blue-900" />
             </div>
-            
             <div>
               <label className="text-xs font-semibold text-blue-700 block mb-1">Payment Days</label>
               <select value={form.payment_days} onChange={e => setForm({...form, payment_days: e.target.value})} className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500">
@@ -346,66 +347,41 @@ const loadBillForEdit = async (id) => {
               </div>
             </div>
             {saleType === 'party' && (
-  <>
-    <div>
-      <label className="text-xs font-semibold text-blue-700 block mb-1">
-        Select Party (Optional)
-      </label>
-
-      <select
-        value={form.party_id}
-        onChange={e => handlePartyChange(e.target.value)}
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
-      >
-        <option value="">-- Manual Entry --</option>
-
-        {parties.map(p => (
-          <option key={p.id} value={p.id}>
-            {p.party_name}
-          </option>
-        ))}
-      </select>
-    </div>
-
-    <div>
-      <label className="text-xs font-semibold text-blue-700 block mb-1">
-        Party Name
-      </label>
-
-      <input
-        type="text"
-        value={form.party_name || ''}
-        onChange={e =>
-          setForm({
-            ...form,
-            party_name: e.target.value,
-            print_name: e.target.value
-          })
-        }
-        placeholder="Enter Party Name"
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
-      />
-    </div>
-
-    <div>
-      <label className="text-xs font-semibold text-blue-700 block mb-1">
-        Print Name
-      </label>
-
-      <input
-        type="text"
-        value={form.print_name || ''}
-        onChange={e =>
-          setForm({
-            ...form,
-            print_name: e.target.value
-          })
-        }
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
-      />
-    </div>
-  </>
-)}
+              <>
+                <div>
+                  <label className="text-xs font-semibold text-blue-700 block mb-1">Select Party (Optional)</label>
+                  <select
+                    value={form.party_id}
+                    onChange={e => handlePartyChange(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="">-- Manual Entry --</option>
+                    {parties.map(p => (
+                      <option key={p.id} value={p.id}>{p.party_name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-blue-700 block mb-1">Party Name</label>
+                  <input
+                    type="text"
+                    value={form.party_name || ''}
+                    onChange={e => setForm({ ...form, party_name: e.target.value, print_name: e.target.value })}
+                    placeholder="Enter Party Name"
+                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-blue-700 block mb-1">Print Name</label>
+                  <input
+                    type="text"
+                    value={form.print_name || ''}
+                    onChange={e => setForm({ ...form, print_name: e.target.value })}
+                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500"
+                  />
+                </div>
+              </>
+            )}
             {saleType === 'cash' && (
               <div className="flex items-center">
                 <span className="bg-green-100 text-green-800 font-bold px-4 py-2 rounded-lg text-sm">💵 CASH SALE</span>
@@ -478,7 +454,7 @@ const loadBillForEdit = async (id) => {
                         </datalist>
                       </td>
 
-                      {/* Description - auto filled */}
+                      {/* Description */}
                       <td className="px-3 py-2">
                         <input
                           type="text"
@@ -547,11 +523,11 @@ const loadBillForEdit = async (id) => {
             </div>
 
             {/* Totals Bar */}
-<div className="mt-3 bg-blue-900 text-white rounded-lg px-4 py-2 flex items-center gap-6 text-sm">
-  <span>Total Qty: <strong className="text-yellow-300">{totalQty} pcs</strong></span>
-  <span>Gross: <strong className="text-yellow-300">₹{grossAmount.toFixed(2)}</strong></span>
-  <span className="ml-auto">Total Amount: <strong className="text-xl text-yellow-300">₹{totalAmount.toFixed(2)}</strong></span>
-</div>
+            <div className="mt-3 bg-blue-900 text-white rounded-lg px-4 py-2 flex items-center gap-6 text-sm">
+              <span>Total Qty: <strong className="text-yellow-300">{totalQty} pcs</strong></span>
+              <span>Gross: <strong className="text-yellow-300">₹{grossAmount.toFixed(2)}</strong></span>
+              <span className="ml-auto">Total Amount: <strong className="text-xl text-yellow-300">₹{totalAmount.toFixed(2)}</strong></span>
+            </div>
           </div>
 
           {/* Payment Details */}
@@ -588,7 +564,7 @@ const loadBillForEdit = async (id) => {
             <button onClick={() => { if(window.confirm('Delete this bill?')) { alert('Nothing to delete — bill not saved yet'); } }} className="bg-red-600 hover:bg-red-700 text-white text-xs px-3 py-1.5 rounded">🗑 Delete F4</button>
             <button onClick={() => window.location.href='/bills'} className="bg-blue-700 hover:bg-blue-600 text-white text-xs px-3 py-1.5 rounded">✏️ Modify F5</button>
             <button onClick={handleSave} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white text-xs px-4 py-1.5 rounded font-bold disabled:opacity-50">
-              {saving ? 'Saving...' : '💾 Save F6'}
+              {saving ? 'Saving...' : editId ? '💾 Update' : '💾 Save F6'}
             </button>
             <button
               onClick={() => {

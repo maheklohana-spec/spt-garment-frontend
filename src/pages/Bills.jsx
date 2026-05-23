@@ -161,12 +161,15 @@ export default function Bills() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex gap-1 justify-center">
-                          <button onClick={() => window.location.href=`/invoice/${bill.id}`} className="bg-indigo-600 text-white text-xs px-2 py-1 rounded hover:bg-indigo-700">🖨 Print</button>
-                          {bill.payment_status !== 'PAID' && (
-                            <button onClick={() => markPayment(bill.id, 'PAID')} className="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">✅ Paid</button>
-                          )}
-                          <button onClick={() => window.location.href=`/sales/edit/${bill.id}`} className="bg-blue-500 text-white text-xs px-2 py-1 rounded hover:bg-blue-600">✏️ Edit</button>
-                        </div>
+  <button onClick={() => window.location.href=`/invoice/${bill.id}`} className="bg-indigo-600 text-white text-xs px-2 py-1 rounded hover:bg-indigo-700">🖨 Print</button>
+  <button onClick={() => window.location.href=`/sales/edit/${bill.id}`} className="bg-blue-500 text-white text-xs px-2 py-1 rounded hover:bg-blue-600">✏️ Edit</button>
+  {bill.payment_status !== 'PAID' && (
+    <button onClick={() => markPayment(bill.id, 'PAID')} className="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">✅ Paid</button>
+  )}
+  {bill.payment_status !== 'HOLD' && (
+    <button onClick={() => markPayment(bill.id, 'HOLD')} className="bg-yellow-500 text-white text-xs px-2 py-1 rounded hover:bg-yellow-600">⏸ Hold</button>
+  )}
+</div>
                       </td>
                     </tr>
                   );
