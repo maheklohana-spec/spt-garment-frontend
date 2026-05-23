@@ -47,10 +47,9 @@ export default function Sales() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-useEffect(() => {
-    fetchData();
-  }, []); 
+  useEffect(() => {
+    fetchData(); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (form.vch_date && form.payment_days) {
