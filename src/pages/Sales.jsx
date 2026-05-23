@@ -250,21 +250,22 @@ export default function Sales() {
     window.location.href = '/sales';
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'F2') { e.preventDefault(); window.location.href = '/bills'; }
-      if (e.key === 'F3') { e.preventDefault(); window.location.href = '/masters'; }
-      if (e.key === 'F6') { e.preventDefault(); handleSave(); }
-      if (e.key === 'F10') {
-        e.preventDefault();
-        if (!savedId) { alert('Please save the bill first!'); return; }
-        window.open(`/invoice/${savedId}`, '_blank');
-      }
-      if (e.key === 'F12') { e.preventDefault(); window.location.href = '/dashboard'; }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [savedId, handleSave]);
+ useEffect(() => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'F2') { e.preventDefault(); window.location.href = '/bills'; }
+    if (e.key === 'F3') { e.preventDefault(); window.location.href = '/masters'; }
+    if (e.key === 'F4') { e.preventDefault(); addRow(); }
+    if (e.key === 'F6') { e.preventDefault(); handleSave(); }
+    if (e.key === 'F10') {
+      e.preventDefault();
+      if (!savedId) { alert('Please save the bill first!'); return; }
+      window.open(`/invoice/${savedId}`, '_blank');
+    }
+    if (e.key === 'F12') { e.preventDefault(); window.location.href = '/dashboard'; }
+  };
+  window.addEventListener('keydown', handleKeyDown);
+  return () => window.removeEventListener('keydown', handleKeyDown);
+}, [savedId, handleSave, addRow]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -401,8 +402,7 @@ export default function Sales() {
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-bold text-gray-700 text-sm">📦 Item Entry</h3>
-              <button onClick={addRow} className="bg-blue-900 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">+ Add Row</button>
-            </div>
+<button onClick={addRow} className="bg-blue-900 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">+ Add Row (Shift)</button>            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs min-w-max">
                 <thead>
