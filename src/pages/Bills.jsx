@@ -165,9 +165,7 @@ export default function Bills() {
                           {bill.payment_status !== 'PAID' && (
                             <button onClick={() => markPayment(bill.id, 'PAID')} className="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">✅ Paid</button>
                           )}
-                          {bill.payment_status !== 'HOLD' && (
-                            <button onClick={() => markPayment(bill.id, 'HOLD')} className="bg-yellow-500 text-white text-xs px-2 py-1 rounded hover:bg-yellow-600">⏸ Hold</button>
-                          )}
+                          <button onClick={() => window.location.href=`/sales/edit/${bill.id}`} className="bg-blue-500 text-white text-xs px-2 py-1 rounded hover:bg-blue-600">✏️ Edit</button>
                         </div>
                       </td>
                     </tr>

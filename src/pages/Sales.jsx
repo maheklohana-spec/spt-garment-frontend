@@ -66,6 +66,61 @@ export default function Sales() {
     setSizes(s.data);
     setBillNo(b.data.bill_no);
   };
+  useEffect(() => {
+  const pathParts = window.location.pathname.split('/');
+  const editId = pathParts[pathParts.length - 1];
+  if (editId && editId !== 'sales' && !isNaN(editId)) {
+    loadBillForEdit(editId);
+  }
+}, []);
+
+const loadBillForEdit = async (id) => {
+  try {
+    const res = await axios.get(`${API}/bills/${id}`);
+    const bill = res.data;
+    setSavedId(bill.id);
+    setSaved(true);
+    setBillNo(bill.bill_no);
+    setSaleType(bill.sale_type || 'cash');
+    setForm({
+      series: bill.series || 'CASH SALE',
+      vch_date: bill.vch_date,
+      tax_type: bill.tax_type || 'Itemwise',
+      party_id: bill.party_id || '',
+      party_name: bill.party_name || '',
+      print_name: bill.print_name || '',
+      from_shop: bill.from_shop || 'SHOP',
+      transport: bill.transport || 'Road',
+      vehicle_no: bill.vehicle_no || '',
+      distance_km: bill.distance_km || '',
+      lr_no: bill.lr_no || '',
+      lr_date: bill.lr_date || '',
+      eway_bill_no: bill.eway_bill_no || '',
+      eway_bill_date: bill.eway_bill_date || '',
+      parcels: bill.parcels || '',
+      form_type: bill.form_type || 'None',
+      courier: bill.courier || '',
+      narration: bill.narration || '',
+      chq_amount: bill.chq_amount || 0,
+      payment_days: bill.payment_days || 30,
+      due_date: bill.due_date || '',
+    });
+    setItems(bill.items.map(item => ({
+      design_id: item.design_id || '',
+      design_no: item.design_no || '',
+      description: item.description || '',
+      size_id: item.size_id || '',
+      size_name: item.size_name || '',
+      qty: item.qty || '',
+      rate: item.rate || '',
+      net_amt: item.net_amt || 0,
+      remarks: item.remarks || '',
+      availableSizes: []
+    })));
+  } catch (err) {
+    alert('Error loading bill for edit');
+  }
+};
 
   const handlePartyChange = (partyId) => {
     const party = parties.find(p => p.id === parseInt(partyId));
@@ -171,9 +226,10 @@ export default function Sales() {
         cash_amount: cashAmount,
         items: validItems
       });
-      setSavedId(response.data.id);
-setSaved(true);
-window.open(`/invoice/${response.data.id}`, '_blank');
+      const newId = savedId || response.data?.id;
+      setSavedId(newId);
+      setSaved(true);
+      window.open(`/invoice/${newId}`, '_blank');
     } catch (err) {
       alert(err.response?.data?.message || 'Error saving sale');
     }
