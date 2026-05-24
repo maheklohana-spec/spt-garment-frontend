@@ -400,10 +400,11 @@ export default function Sales() {
 
           {/* Item Entry Grid */}
           <div className="p-4 border-b border-gray-100">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-gray-700 text-sm">📦 Item Entry</h3>
-              <button onClick={addRow} className="bg-blue-900 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">+ Add Row (PgDn)</button>
-            <div className="overflow-x-auto">
+           <div className="flex items-center justify-between mb-3">
+  <h3 className="font-bold text-gray-700 text-sm">📦 Item Entry</h3>
+  <button onClick={addRow} className="bg-blue-900 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">+ Add Row (PgDn)</button>
+</div>
+<div className="overflow-x-auto">
               <table className="w-full text-xs min-w-max">
                 <thead>
                   <tr className="bg-blue-900 text-white">
