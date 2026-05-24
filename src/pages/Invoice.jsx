@@ -6,7 +6,9 @@ function numberToWords(num) {
     'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen',
     'Seventeen', 'Eighteen', 'Nineteen'];
   const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
   if (num === 0) return 'Zero';
+
   function convert(n) {
     if (n < 20) return ones[n];
     if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
@@ -15,6 +17,7 @@ function numberToWords(num) {
     if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '');
     return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
   }
+
   const rupees = Math.floor(num);
   const paise = Math.round((num - rupees) * 100);
   let result = convert(rupees) + ' Rupees';
@@ -34,6 +37,7 @@ export default function Invoice() {
     axios.get(`https://spt-garment.onrender.com/api/bills/${id}`)
       .then(res => { setBill(res.data); setLoading(false); })
       .catch(() => { setError('Bill not found'); setLoading(false); });
+
     axios.get('https://spt-garment.onrender.com/api/settings')
       .then(res => setSettings(res.data))
       .catch(() => {});
@@ -41,14 +45,14 @@ export default function Invoice() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
-      <p className="text-gray-500">Loading invoice...</p>
+      <p className="text-gray-500 text-lg">Loading invoice...</p>
     </div>
   );
 
   if (error) return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <p className="text-red-500 mb-4">{error}</p>
+        <p className="text-red-500 text-lg mb-4">{error}</p>
         <button onClick={() => window.location.href='/bills'} className="bg-blue-900 text-white px-4 py-2 rounded">Go Back</button>
       </div>
     </div>
@@ -56,132 +60,131 @@ export default function Invoice() {
 
   return (
     <div>
-      {/* Toolbar - hidden on print */}
+      {/* Toolbar */}
       <div className="bg-blue-900 text-white px-6 py-3 flex gap-3 items-center no-print">
         <button onClick={() => window.location.href='/bills'} className="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded text-sm">← Back</button>
         <button onClick={() => window.print()} className="bg-green-600 hover:bg-green-700 px-6 py-2 rounded text-sm font-bold">🖨 Print</button>
         <span className="text-sm opacity-70">Invoice: {bill.bill_no}</span>
       </div>
 
-      {/* Invoice - tight compact layout matching physical bill */}
-      <div className="mx-auto bg-white" style={{ maxWidth: '680px', padding: '12px', marginTop: '8px' }}>
+      {/* Invoice */}
+      <div className="max-w-3xl mx-auto bg-white p-4 mt-2 shadow-lg print:shadow-none print:mt-0 print:p-3">
 
-        {/* Header */}
-        <div style={{ textAlign: 'center', borderBottom: '1px solid #000', paddingBottom: '4px', marginBottom: '4px' }}>
-          <div style={{ fontSize: '10px', marginBottom: '1px' }}>ON APPROVAL</div>
-          <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
-            {bill.series || settings.company_name || 'SP'}
-          </div>
-          {settings.address && <div style={{ fontSize: '9px', color: '#555' }}>{settings.address}{settings.city ? ', ' + settings.city : ''}</div>}
+        {/* Company Header */}
+        <div className="text-center border-b-2 border-gray-800 pb-2 mb-3">
+          <h1 className="text-2xl font-bold text-gray-900 uppercase">
+            {bill.series || settings.company_name || 'CASH SALE'}
+          </h1>
+          <p className="text-xs text-gray-600 mt-0.5">Garment Wholesale Dealer</p>
+          {settings.address && <p className="text-xs text-gray-500">{settings.address}{settings.city ? ', ' + settings.city : ''}</p>}
+          {settings.mobile && <p className="text-xs text-gray-500">Mobile: {settings.mobile}</p>}
+          {settings.gstin && <p className="text-xs text-gray-500">GSTIN: {settings.gstin}</p>}
         </div>
 
-        {/* Party + Bill Info row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', fontSize: '11px' }}>
-          <div>
-            <div>To,</div>
-            <div style={{ fontWeight: 'bold' }}>{bill.party_name || 'CASH A/C'}</div>
+        {/* Party + Invoice Info */}
+        <div className="flex justify-between mb-3 gap-4">
+          <div className="flex-1 border border-gray-300 rounded p-2">
+            <p className="text-xs text-gray-500 mb-0.5 font-semibold uppercase">Bill To</p>
+            <p className="font-bold text-gray-900 text-sm">M/S {bill.party_name || 'CASH SALE'}</p>
+            {bill.print_name && bill.print_name !== bill.party_name && (
+              <p className="text-xs text-gray-600">{bill.print_name}</p>
+            )}
+            {bill.gstin && <p className="text-xs text-gray-500 mt-0.5">GSTIN: {bill.gstin}</p>}
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div><strong>Bill No. :</strong> {bill.bill_no}</div>
-            <div><strong>Date :</strong> {bill.vch_date}</div>
-            <div style={{ marginTop: '4px' }}><strong>Parcel :</strong> {bill.parcels || ''}</div>
+          <div className="flex-1 border border-gray-300 rounded p-2">
+            <div className="grid grid-cols-2 gap-0.5 text-xs">
+              <span className="text-gray-500 font-semibold">Invoice No:</span>
+              <span className="font-bold text-blue-900">{bill.bill_no}</span>
+              <span className="text-gray-500 font-semibold">Bill Date:</span>
+              <span>{bill.vch_date}</span>
+            </div>
           </div>
         </div>
-
-        {/* BILL NO label */}
-        <div style={{ fontSize: '10px', marginBottom: '2px' }}>BILL NO.</div>
 
         {/* Items Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+        <table className="w-full border-collapse text-sm mb-3">
           <thead>
-            <tr style={{ background: '#fff' }}>
-              <th style={th}>Sr</th>
-              <th style={th}>Design. No</th>
-              <th style={th}>Description</th>
-              <th style={th}>Size</th>
-              <th style={th}>Qty</th>
-              <th style={th}>Rate</th>
-              <th style={th}>Amount</th>
+            <tr className="bg-gray-900 text-white">
+              <th className="border border-gray-600 px-2 py-1.5 text-left text-xs">Sr</th>
+              <th className="border border-gray-600 px-2 py-1.5 text-left text-xs">Design No</th>
+              <th className="border border-gray-600 px-2 py-1.5 text-left text-xs">Particulars</th>
+              <th className="border border-gray-600 px-2 py-1.5 text-center text-xs">Size</th>
+              <th className="border border-gray-600 px-2 py-1.5 text-center text-xs">Qty</th>
+              <th className="border border-gray-600 px-2 py-1.5 text-right text-xs">Rate (₹)</th>
+              <th className="border border-gray-600 px-2 py-1.5 text-right text-xs">Amount (₹)</th>
             </tr>
           </thead>
           <tbody>
-            {bill.items && bill.items.map((item, i) => (
-              <tr key={i}>
-                <td style={td}>{i + 1}</td>
-                <td style={td}>{item.design_no || ''}</td>
-                <td style={td}>{item.description || ''}</td>
-                <td style={td}>{item.size_name || ''}</td>
-                <td style={{ ...td, textAlign: 'right' }}>{item.qty}</td>
-                <td style={{ ...td, textAlign: 'right' }}>{parseFloat(item.rate).toFixed(2)}</td>
-                <td style={{ ...td, textAlign: 'right' }}>{parseFloat(item.net_amt).toFixed(2)}</td>
+            {bill.items?.length > 0 ? bill.items.map((item, i) => (
+              <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <td className="border border-gray-300 px-2 py-1 text-center text-gray-500 text-xs">{i + 1}</td>
+                <td className="border border-gray-300 px-2 py-1 font-semibold text-blue-900 text-xs">{item.design_no || '-'}</td>
+                <td className="border border-gray-300 px-2 py-1 font-semibold text-xs">{item.description}</td>
+                <td className="border border-gray-300 px-2 py-1 text-center text-xs font-semibold">{item.size_name}</td>
+                <td className="border border-gray-300 px-2 py-1 text-center font-bold text-xs">{item.qty}</td>
+                <td className="border border-gray-300 px-2 py-1 text-right text-xs">{parseFloat(item.rate).toFixed(2)}</td>
+                <td className="border border-gray-300 px-2 py-1 text-right font-bold text-xs">{parseFloat(item.net_amt).toFixed(2)}</td>
               </tr>
-            ))}
-            {/* Empty filler rows to match physical bill look - only if few items */}
-            {bill.items && bill.items.length < 8 && Array.from({ length: Math.max(0, 8 - bill.items.length) }).map((_, i) => (
-              <tr key={`empty-${i}`}>
-                <td style={tdEmpty}>&nbsp;</td>
-                <td style={tdEmpty}></td>
-                <td style={tdEmpty}></td>
-                <td style={tdEmpty}></td>
-                <td style={tdEmpty}></td>
-                <td style={tdEmpty}></td>
-                <td style={tdEmpty}></td>
+            )) : (
+              <tr>
+                <td colSpan="7" className="border border-gray-300 px-3 py-4 text-center text-gray-400">No items</td>
               </tr>
-            ))}
+            )}
           </tbody>
-          {/* Total row */}
           <tfoot>
-            <tr>
-              <td colSpan="3" style={{ ...td, textAlign: 'right', fontWeight: 'bold' }}>Total</td>
-              <td style={{ ...td, textAlign: 'right', fontWeight: 'bold' }}>{bill.total_qty} Pcs</td>
-              <td colSpan="2" style={{ ...td, fontWeight: 'bold' }}>Gross</td>
-              <td style={{ ...td, textAlign: 'right', fontWeight: 'bold' }}>{parseFloat(bill.gross_amount || bill.total_amount).toFixed(2)}</td>
+            <tr className="bg-gray-800 text-white font-bold">
+              <td colSpan="4" className="border border-gray-600 px-2 py-1.5 text-right text-xs">Total:</td>
+              <td className="border border-gray-600 px-2 py-1.5 text-center text-xs">{bill.total_qty} pcs</td>
+              <td className="border border-gray-600 px-2 py-1.5 text-right text-xs">Gross:</td>
+              <td className="border border-gray-600 px-2 py-1.5 text-right text-xs">₹{parseFloat(bill.total_amount).toFixed(2)}</td>
             </tr>
           </tfoot>
         </table>
 
-        {/* Bottom section - date/transport left, amounts right */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', fontSize: '11px' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ marginBottom: '2px' }}>{bill.vch_date}</div>
-            <div style={{ marginBottom: '2px' }}>Transport : {bill.transport ? bill.transport : '-'}</div>
-            <div style={{ marginBottom: '2px' }}>LR No. : {bill.lr_no || ''}</div>
-            <div>LR Dt. : {bill.lr_date || ''}</div>
-          </div>
-          <div style={{ minWidth: '200px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
-              <tbody>
-                {bill.chq_amount > 0 && (
-                  <tr>
-                    <td style={tdRight}>Cheque Amt</td>
-                    <td style={{ ...tdRight, textAlign: 'right' }}>{parseFloat(bill.chq_amount).toFixed(2)}</td>
-                  </tr>
-                )}
-                {bill.cash_amount > 0 && (
-                  <tr>
-                    <td style={tdRight}>Cash Amt</td>
-                    <td style={{ ...tdRight, textAlign: 'right' }}>{parseFloat(bill.cash_amount).toFixed(2)}</td>
-                  </tr>
-                )}
-                <tr>
-                  <td style={{ ...tdRight, fontWeight: 'bold' }}>BILL AMT</td>
-                  <td style={{ ...tdRight, textAlign: 'right', fontWeight: 'bold' }}>{parseFloat(bill.total_amount).toFixed(2)}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        {/* Amount in Words */}
+        <div className="border border-gray-300 rounded p-2 mb-3 bg-gray-50">
+          <span className="text-xs text-gray-500 font-semibold">Amount in Words: </span>
+          <span className="font-semibold text-gray-800 text-xs">
+            {numberToWords(parseFloat(bill.total_amount) || 0)}
+          </span>
         </div>
 
-        {/* Amount in words */}
-        <div style={{ borderTop: '1px solid #000', marginTop: '4px', paddingTop: '3px', fontSize: '10px' }}>
-          {numberToWords(parseFloat(bill.total_amount) || 0)}
+        {/* Payment Summary */}
+        <div className="flex justify-end mb-3">
+          <div className="w-56">
+            <div className="flex justify-between py-1 text-xs border-b border-gray-200">
+              <span className="text-gray-600">Gross Amount</span>
+              <span className="font-semibold">₹{parseFloat(bill.gross_amount || bill.total_amount).toFixed(2)}</span>
+            </div>
+            {bill.chq_amount > 0 && (
+              <div className="flex justify-between py-1 text-xs border-b border-gray-200">
+                <span className="text-gray-600">Cheque Amount</span>
+                <span>₹{parseFloat(bill.chq_amount).toFixed(2)}</span>
+              </div>
+            )}
+            {bill.cash_amount > 0 && (
+              <div className="flex justify-between py-1 text-xs border-b border-gray-200">
+                <span className="text-gray-600">Cash Amount</span>
+                <span>₹{parseFloat(bill.cash_amount).toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between py-1.5 bg-gray-900 text-white rounded px-2 mt-1">
+              <span className="font-bold text-xs">BILL AMOUNT</span>
+              <span className="font-bold text-sm">₹{parseFloat(bill.total_amount).toFixed(2)}</span>
+            </div>
+          </div>
         </div>
 
         {/* Terms */}
-        <div style={{ marginTop: '3px', fontSize: '9px', color: '#555' }}>
-          Goods are non returnable. Subject to local jurisdiction.
+        <div className="border-t border-gray-300 pt-2">
+          <p className="text-xs text-gray-500 font-semibold">Terms & Conditions:</p>
+          <p className="text-xs text-gray-400 mt-0.5">• Goods are non returnable.</p>
+          <p className="text-xs text-gray-400">• Subject to local jurisdiction.</p>
         </div>
 
+        <div className="text-center mt-2">
+          <p className="text-xs text-gray-300">System developed by SPT</p>
+        </div>
       </div>
 
       <style>{`
@@ -194,32 +197,3 @@ export default function Invoice() {
     </div>
   );
 }
-
-// Inline styles for compact table
-const th = {
-  border: '1px solid #000',
-  padding: '3px 5px',
-  textAlign: 'left',
-  fontWeight: 'bold',
-  fontSize: '11px',
-  whiteSpace: 'nowrap',
-};
-
-const td = {
-  border: '1px solid #000',
-  padding: '2px 5px',
-  fontSize: '11px',
-};
-
-const tdEmpty = {
-  border: '1px solid #000',
-  padding: '0px 5px',
-  height: '16px',
-  fontSize: '11px',
-};
-
-const tdRight = {
-  border: '1px solid #000',
-  padding: '2px 5px',
-  fontSize: '11px',
-};
