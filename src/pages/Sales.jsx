@@ -254,7 +254,7 @@ export default function Sales() {
   const handleKeyDown = (e) => {
     if (e.key === 'F2') { e.preventDefault(); window.location.href = '/bills'; }
     if (e.key === 'F3') { e.preventDefault(); window.location.href = '/masters'; }
-    if (e.key === 'F4') { e.preventDefault(); addRow(); }
+    if (e.key === 'PageDown') { e.preventDefault(); addRow(); }
     if (e.key === 'F6') { e.preventDefault(); handleSave(); }
     if (e.key === 'F10') {
       e.preventDefault();
@@ -402,7 +402,7 @@ export default function Sales() {
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-bold text-gray-700 text-sm">📦 Item Entry</h3>
-<button onClick={addRow} className="bg-blue-900 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">+ Add Row (Shift)</button>            </div>
+              <button onClick={addRow} className="bg-blue-900 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">+ Add Row (PgDn)</button>
             <div className="overflow-x-auto">
               <table className="w-full text-xs min-w-max">
                 <thead>
