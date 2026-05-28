@@ -7,6 +7,20 @@ const API = 'https://spt-garment.onrender.com/api';
 
 export default function Sales() {
   useEnterKey();
+  useEffect(() => {
+  const handleKey = (e) => {
+    if (e.key === 'PageDown') {
+      e.preventDefault();
+      e.stopPropagation();
+      setItems(prev => [...prev, {
+        design_id: '', design_no: '', description: '', size_id: '',
+        size_name: '', qty: '', rate: '', net_amt: 0, remarks: '', availableSizes: []
+      }]);
+    }
+  };
+  document.addEventListener('keydown', handleKey, true);
+  return () => document.removeEventListener('keydown', handleKey, true);
+}, []);
 
   const editId = window.location.pathname.includes('/edit/') 
     ? window.location.pathname.split('/edit/')[1] 
@@ -520,6 +534,18 @@ export default function Sales() {
                     </tr>
                   ))}
                 </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan="11" className="px-3 py-2">
+                      <button
+                        onClick={addRow}
+                        className="w-full bg-blue-50 hover:bg-blue-100 text-blue-900 text-xs py-2 rounded border-2 border-dashed border-blue-300 font-semibold"
+                      >
+                        + Add New Row (Click here or press PageDown)
+                      </button>
+                    </td>
+                  </tr>
+                </tfoot>
               </table>
             </div>
 
